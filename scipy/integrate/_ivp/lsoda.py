@@ -165,7 +165,10 @@ class LSODA(OdeSolver):
         rwork = self._lsoda_solver._integrator.rwork
 
         order = iwork[13]
-        h = [rwork[10], rwork[11]]
+        if iwork[14] < order:
+            h = np.repeat(rwork[11:9:-1], [order, 1])
+        else:
+            h = rwork[11] * np.ones(order + 1)
         yh = np.reshape(rwork[20:20 + (order + 1) * self.n],
                         (self.n, order + 1), order='F').copy()
 
@@ -175,7 +178,7 @@ class LSODA(OdeSolver):
 class LsodaDenseOutput(DenseOutput):
     def __init__(self, t_old, t, h, order, yh):
         super().__init__(t_old, t)
-        self.h = np.asarray([h[1]] * order + [h[0]])
+        self.h = h
         self.yh = yh
         self.p = np.arange(order + 1)
 
@@ -183,6 +186,6 @@ class LsodaDenseOutput(DenseOutput):
         if t.ndim == 0:
             x = ((t - self.t) / self.h) ** self.p
         else:
-            x = ((t - self.t) / self.h) ** self.p[:, None]
+            x = ((t - self.t) / self.h[:, None]) ** self.p[:, None]
 
         return np.dot(self.yh, x)
