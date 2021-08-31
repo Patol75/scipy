@@ -201,11 +201,7 @@ def test_integration():
         e = compute_error(yc, yc_true, rtol, atol)
         assert_(np.all(e < 5))
 
-        # LSODA for some reasons doesn't pass the polynomial through the
-        # previous points exactly after the order change. It might be some
-        # bug in LSOSA implementation or maybe we missing something.
-        if method != 'LSODA':
-            assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
+        assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
 
 def test_integration_complex():
@@ -538,21 +534,18 @@ def test_max_step():
             e = compute_error(yc, yc_true, rtol, atol)
             assert_(np.all(e < 5))
 
-            # See comment in test_integration.
-            if method is not LSODA:
-                assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
+            assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
             assert_raises(ValueError, method, fun_rational, t_span[0], y0,
                           t_span[1], max_step=-1)
 
-            if method is not LSODA:
-                solver = method(fun_rational, t_span[0], y0, t_span[1],
-                                rtol=rtol, atol=atol, max_step=1e-20)
-                message = solver.step()
+            solver = method(fun_rational, t_span[0], y0, t_span[1],
+                            rtol=rtol, atol=atol, max_step=1e-20)
+            message = solver.step()
 
-                assert_equal(solver.status, 'failed')
-                assert_("step size is less" in message)
-                assert_raises(RuntimeError, solver.step)
+            assert_equal(solver.status, 'failed')
+            assert_("step size is less" in message)
+            assert_raises(RuntimeError, solver.step)
 
 
 def test_first_step():
@@ -584,9 +577,7 @@ def test_first_step():
             e = compute_error(yc, yc_true, rtol, atol)
             assert_(np.all(e < 5))
 
-            # See comment in test_integration.
-            if method is not LSODA:
-                assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
+            assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
             assert_raises(ValueError, method, fun_rational, t_span[0], y0,
                           t_span[1], first_step=-1)
