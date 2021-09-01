@@ -178,9 +178,9 @@ class OdeSolution:
         # Here we preserve a certain symmetry that when t is in self.ts,
         # then we prioritize a segment with a lower index.
         if self.ascending:
-            ind = np.searchsorted(self.ts_sorted, t, side='left')
-        else:
             ind = np.searchsorted(self.ts_sorted, t, side='right')
+        else:
+            ind = np.searchsorted(self.ts_sorted, t, side='left')
 
         segment = min(max(ind - 1, 0), self.n_segments - 1)
         if not self.ascending:
@@ -214,9 +214,9 @@ class OdeSolution:
 
         # See comment in self._call_single.
         if self.ascending:
-            segments = np.searchsorted(self.ts_sorted, t_sorted, side='left')
-        else:
             segments = np.searchsorted(self.ts_sorted, t_sorted, side='right')
+        else:
+            segments = np.searchsorted(self.ts_sorted, t_sorted, side='left')
         segments -= 1
         segments[segments < 0] = 0
         segments[segments > self.n_segments - 1] = self.n_segments - 1
