@@ -135,6 +135,18 @@ def sol_complex(t):
     return y.reshape((1, -1))
 
 
+def fun_dense_output_LSODA(t, y):
+    return y * (t - 2)
+
+
+def jac_dense_output_LSODA(t, y):
+    return t - 2
+
+
+def sol_dense_output_LSODA(t):
+    return np.exp(t ** 2 / 2 - 2 * t + np.log(0.05) - 6)
+
+
 def compute_error(y, y_true, rtol, atol):
     e = (y - y_true) / (atol + rtol * np.abs(y_true))
     return np.linalg.norm(e, axis=0) / np.sqrt(e.shape[0])
@@ -673,6 +685,41 @@ def test_t_eval_dense_output():
     y_true = sol_rational(res.t)
     e = compute_error(res.y, y_true, rtol, atol)
     assert_(np.all(e < 5))
+
+
+# This test ensures that the interpolant calculated through LSODA is correct.
+# Arguments provided to solve_ivp should allow for method order changes within
+# the solver, thereby guaranteeing a full test coverage of _dense_output_impl
+# in lsoda.py
+def test_dense_output_LSODA():
+    rtol = 1e-3
+    atol = 1e-6
+    y0 = [0.05]
+    t_span = [-2, 2]
+    first_step = 1e-3
+    res = solve_ivp(fun_dense_output_LSODA, t_span, y0, method="LSODA",
+                    dense_output=True, first_step=first_step, max_step=1,
+                    rtol=rtol, atol=atol, jac=jac_dense_output_LSODA)
+
+    assert_equal(res.t[0], t_span[0])
+    assert_equal(res.t[-1], t_span[-1])
+    assert_allclose(first_step, np.abs(res.t[1] - t_span[0]))
+    assert_(res.t_events is None)
+    assert_(res.success)
+    assert_equal(res.status, 0)
+
+    y_true = sol_dense_output_LSODA(res.t)
+    e = compute_error(res.y, y_true, rtol, atol)
+    assert_(np.all(e < 5))
+
+    tc = np.linspace(*t_span)
+    yc_true = sol_dense_output_LSODA(tc)
+    yc = res.sol(tc)
+
+    e = compute_error(yc, yc_true, rtol, atol)
+    assert_(np.all(e < 5))
+
+    assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
 
 def test_no_integration():

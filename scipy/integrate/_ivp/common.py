@@ -130,8 +130,8 @@ class OdeSolution:
     Attributes below). Evaluation outside this interval is not forbidden, but
     the accuracy is not guaranteed.
 
-    When evaluating at a breakpoint (one of the values in `ts`) a segment with
-    the lower index is selected.
+    When evaluating at a breakpoint (one of the values in `ts`), the segment
+    with the higher index is selected.
 
     Parameters
     ----------
@@ -175,8 +175,9 @@ class OdeSolution:
             self.ts_sorted = ts[::-1]
 
     def _call_single(self, t):
-        # Here we preserve a certain symmetry that when t is in self.ts,
-        # then we prioritize a segment with a lower index.
+        # When t is in self.ts, prioritize the segment with the higher index;
+        # this allows to assess that the interpolant of the LSODA solver
+        # behaves correctly.
         if self.ascending:
             ind = np.searchsorted(self.ts_sorted, t, side='right')
         else:
