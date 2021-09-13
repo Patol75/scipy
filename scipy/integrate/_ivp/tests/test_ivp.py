@@ -1,6 +1,6 @@
 from itertools import product
-from numpy.testing import (assert_, assert_allclose,
-                           assert_equal, assert_no_warnings, suppress_warnings)
+from numpy.testing import (assert_allclose, assert_array_less, assert_equal,
+                           assert_no_warnings, suppress_warnings)
 import pytest
 from pytest import raises as assert_raises
 import numpy as np
@@ -176,42 +176,42 @@ def test_integration():
                             atol=atol, method=method, dense_output=True,
                             jac=jac, vectorized=vectorized)
         assert_equal(res.t[0], t_span[0])
-        assert_(res.t_events is None)
-        assert_(res.y_events is None)
-        assert_(res.success)
+        assert res.t_events is None
+        assert res.y_events is None
+        assert res.success
         assert_equal(res.status, 0)
 
         if method == 'DOP853':
             # DOP853 spends more functions evaluation because it doesn't
             # have enough time to develop big enough step size.
-            assert_(res.nfev < 50)
+            assert res.nfev < 50
         else:
-            assert_(res.nfev < 40)
+            assert res.nfev < 40
 
         if method in ['RK23', 'RK45', 'DOP853', 'LSODA']:
             assert_equal(res.njev, 0)
             assert_equal(res.nlu, 0)
         else:
-            assert_(0 < res.njev < 3)
-            assert_(0 < res.nlu < 10)
+            assert 0 < res.njev < 3
+            assert 0 < res.nlu < 10
 
         y_true = sol_rational(res.t)
         e = compute_error(res.y, y_true, rtol, atol)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
         tc = np.linspace(*t_span)
         yc_true = sol_rational(tc)
         yc = res.sol(tc)
 
         e = compute_error(yc, yc_true, rtol, atol)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
         tc = (t_span[0] + t_span[-1]) / 2
         yc_true = sol_rational(tc)
         yc = res.sol(tc)
 
         e = compute_error(yc, yc_true, rtol, atol)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
         assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
@@ -232,9 +232,9 @@ def test_integration_complex():
                             dense_output=True, rtol=rtol, atol=atol, jac=jac)
 
         assert_equal(res.t[0], t_span[0])
-        assert_(res.t_events is None)
-        assert_(res.y_events is None)
-        assert_(res.success)
+        assert res.t_events is None
+        assert res.y_events is None
+        assert res.success
         assert_equal(res.status, 0)
 
         if method == 'DOP853':
@@ -251,13 +251,13 @@ def test_integration_complex():
 
         y_true = sol_complex(res.t)
         e = compute_error(res.y, y_true, rtol, atol)
-        assert np.all(e < 5)
+        assert_array_less(e, 5)
 
         yc_true = sol_complex(tc)
         yc = res.sol(tc)
         e = compute_error(yc, yc_true, rtol, atol)
 
-        assert np.all(e < 5)
+        assert_array_less(e, 5)
 
 
 def test_integration_sparse_difference():
@@ -272,9 +272,9 @@ def test_integration_sparse_difference():
                         jac_sparsity=sparsity)
 
         assert_equal(res.t[0], t_span[0])
-        assert_(res.t_events is None)
-        assert_(res.y_events is None)
-        assert_(res.success)
+        assert res.t_events is None
+        assert res.y_events is None
+        assert res.success
         assert_equal(res.status, 0)
 
         assert_allclose(res.y[78, -1], 0.233994e-3, rtol=1e-2)
@@ -299,25 +299,25 @@ def test_integration_const_jac():
         res = solve_ivp(fun_linear, t_span, y0, rtol=rtol, atol=atol,
                         method=method, dense_output=True, jac=jac)
         assert_equal(res.t[0], t_span[0])
-        assert_(res.t_events is None)
-        assert_(res.y_events is None)
-        assert_(res.success)
+        assert res.t_events is None
+        assert res.y_events is None
+        assert res.success
         assert_equal(res.status, 0)
 
-        assert_(res.nfev < 100)
+        assert res.nfev < 100
         assert_equal(res.njev, 0)
-        assert_(0 < res.nlu < 15)
+        assert 0 < res.nlu < 15
 
         y_true = sol_linear(res.t)
         e = compute_error(res.y, y_true, rtol, atol)
-        assert_(np.all(e < 10))
+        assert_array_less(e, 10)
 
         tc = np.linspace(*t_span)
         yc_true = sol_linear(tc)
         yc = res.sol(tc)
 
         e = compute_error(yc, yc_true, rtol, atol)
-        assert_(np.all(e < 15))
+        assert_array_less(e, 15)
 
         assert_allclose(res.sol(res.t), res.y, rtol=1e-14, atol=1e-14)
 
@@ -364,8 +364,8 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 1)
         assert_equal(res.t_events[1].size, 1)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
-        assert_(7.3 < res.t_events[1][0] < 7.7)
+        assert 5.3 < res.t_events[0][0] < 5.7
+        assert 7.3 < res.t_events[1][0] < 7.7
 
         assert_equal(res.y_events[0].shape, (1, 2))
         assert_equal(res.y_events[1].shape, (1, 2))
@@ -381,7 +381,7 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 1)
         assert_equal(res.t_events[1].size, 0)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
+        assert 5.3 < res.t_events[0][0] < 5.7
         assert_equal(res.y_events[0].shape, (1, 2))
         assert_equal(res.y_events[1].shape, (0,))
         assert np.isclose(
@@ -394,7 +394,7 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 0)
         assert_equal(res.t_events[1].size, 1)
-        assert_(7.3 < res.t_events[1][0] < 7.7)
+        assert 7.3 < res.t_events[1][0] < 7.7
         assert_equal(res.y_events[0].shape, (0,))
         assert_equal(res.y_events[1].shape, (1, 2))
         assert np.isclose(
@@ -410,8 +410,8 @@ def test_events():
         assert_equal(res.t_events[0].size, 1)
         assert_equal(res.t_events[1].size, 0)
         assert_equal(res.t_events[2].size, 1)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
-        assert_(7.3 < res.t_events[2][0] < 7.5)
+        assert 5.3 < res.t_events[0][0] < 5.7
+        assert 7.3 < res.t_events[2][0] < 7.5
         assert_equal(res.y_events[0].shape, (1, 2))
         assert_equal(res.y_events[1].shape, (0,))
         assert_equal(res.y_events[2].shape, (1, 2))
@@ -424,7 +424,7 @@ def test_events():
                         events=event_rational_1, dense_output=True)
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 1)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
+        assert 5.3 < res.t_events[0][0] < 5.7
 
         assert_equal(res.y_events[0].shape, (1, 2))
         assert np.isclose(
@@ -435,7 +435,7 @@ def test_events():
         yc_true = sol_rational(tc)
         yc = res.sol(tc)
         e = compute_error(yc, yc_true, 1e-3, 1e-6)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
         # Test that the y_event matches solution
         assert np.allclose(sol_rational(res.t_events[0][0]), res.y_events[0][0], rtol=1e-3, atol=1e-6)
@@ -449,8 +449,8 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 1)
         assert_equal(res.t_events[1].size, 1)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
-        assert_(7.3 < res.t_events[1][0] < 7.7)
+        assert 5.3 < res.t_events[0][0] < 5.7
+        assert 7.3 < res.t_events[1][0] < 7.7
 
         assert_equal(res.y_events[0].shape, (1, 2))
         assert_equal(res.y_events[1].shape, (1, 2))
@@ -466,7 +466,7 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 1)
         assert_equal(res.t_events[1].size, 0)
-        assert_(5.3 < res.t_events[0][0] < 5.7)
+        assert 5.3 < res.t_events[0][0] < 5.7
 
         assert_equal(res.y_events[0].shape, (1, 2))
         assert_equal(res.y_events[1].shape, (0,))
@@ -480,7 +480,7 @@ def test_events():
         assert_equal(res.status, 0)
         assert_equal(res.t_events[0].size, 0)
         assert_equal(res.t_events[1].size, 1)
-        assert_(7.3 < res.t_events[1][0] < 7.7)
+        assert 7.3 < res.t_events[1][0] < 7.7
 
         assert_equal(res.y_events[0].shape, (0,))
         assert_equal(res.y_events[1].shape, (1, 2))
@@ -497,8 +497,8 @@ def test_events():
         assert_equal(res.t_events[0].size, 0)
         assert_equal(res.t_events[1].size, 1)
         assert_equal(res.t_events[2].size, 1)
-        assert_(7.3 < res.t_events[1][0] < 7.7)
-        assert_(7.3 < res.t_events[2][0] < 7.5)
+        assert 7.3 < res.t_events[1][0] < 7.7
+        assert 7.3 < res.t_events[2][0] < 7.5
 
         assert_equal(res.y_events[0].shape, (0,))
         assert_equal(res.y_events[1].shape, (1, 2))
@@ -513,7 +513,7 @@ def test_events():
         yc_true = sol_rational(tc)
         yc = res.sol(tc)
         e = compute_error(yc, yc_true, 1e-3, 1e-6)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
         assert np.allclose(sol_rational(res.t_events[1][0]), res.y_events[1][0], rtol=1e-3, atol=1e-6)
         assert np.allclose(sol_rational(res.t_events[2][0]), res.y_events[2][0], rtol=1e-3, atol=1e-6)
@@ -530,21 +530,21 @@ def test_max_step():
                             dense_output=True)
             assert_equal(res.t[0], t_span[0])
             assert_equal(res.t[-1], t_span[-1])
-            assert_(np.all(np.abs(np.diff(res.t)) <= 0.5 + 1e-15))
-            assert_(res.t_events is None)
-            assert_(res.success)
+            assert_array_less(np.abs(np.diff(res.t)), 0.5 + 1e-15)
+            assert res.t_events is None
+            assert res.success
             assert_equal(res.status, 0)
 
             y_true = sol_rational(res.t)
             e = compute_error(res.y, y_true, rtol, atol)
-            assert_(np.all(e < 5))
+            assert_array_less(e, 5)
 
             tc = np.linspace(*t_span)
             yc_true = sol_rational(tc)
             yc = res.sol(tc)
 
             e = compute_error(yc, yc_true, rtol, atol)
-            assert_(np.all(e < 5))
+            assert_array_less(e, 5)
 
             assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
@@ -557,7 +557,7 @@ def test_max_step():
                 message = solver.step()
 
                 assert_equal(solver.status, 'failed')
-                assert_("step size is less" in message)
+                assert "step size is less" in message
                 assert_raises(RuntimeError, solver.step)
 
 
@@ -575,20 +575,20 @@ def test_first_step():
             assert_equal(res.t[0], t_span[0])
             assert_equal(res.t[-1], t_span[-1])
             assert_allclose(first_step, np.abs(res.t[1] - 5))
-            assert_(res.t_events is None)
-            assert_(res.success)
+            assert res.t_events is None
+            assert res.success
             assert_equal(res.status, 0)
 
             y_true = sol_rational(res.t)
             e = compute_error(res.y, y_true, rtol, atol)
-            assert_(np.all(e < 5))
+            assert_array_less(e, 5)
 
             tc = np.linspace(*t_span)
             yc_true = sol_rational(tc)
             yc = res.sol(tc)
 
             e = compute_error(yc, yc_true, rtol, atol)
-            assert_(np.all(e < 5))
+            assert_array_less(e, 5)
 
             assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
@@ -607,52 +607,52 @@ def test_t_eval():
         res = solve_ivp(fun_rational, t_span, y0, rtol=rtol, atol=atol,
                         t_eval=t_eval)
         assert_equal(res.t, t_eval)
-        assert_(res.t_events is None)
-        assert_(res.success)
+        assert res.t_events is None
+        assert res.success
         assert_equal(res.status, 0)
 
         y_true = sol_rational(res.t)
         e = compute_error(res.y, y_true, rtol, atol)
-        assert_(np.all(e < 5))
+        assert_array_less(e, 5)
 
     t_eval = [5, 5.01, 7, 8, 8.01, 9]
     res = solve_ivp(fun_rational, [5, 9], y0, rtol=rtol, atol=atol,
                     t_eval=t_eval)
     assert_equal(res.t, t_eval)
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     y_true = sol_rational(res.t)
     e = compute_error(res.y, y_true, rtol, atol)
-    assert_(np.all(e < 5))
+    assert_array_less(e, 5)
 
     t_eval = [5, 4.99, 3, 1.5, 1.1, 1.01, 1]
     res = solve_ivp(fun_rational, [5, 1], y0, rtol=rtol, atol=atol,
                     t_eval=t_eval)
     assert_equal(res.t, t_eval)
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     t_eval = [5.01, 7, 8, 8.01]
     res = solve_ivp(fun_rational, [5, 9], y0, rtol=rtol, atol=atol,
                     t_eval=t_eval)
     assert_equal(res.t, t_eval)
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     y_true = sol_rational(res.t)
     e = compute_error(res.y, y_true, rtol, atol)
-    assert_(np.all(e < 5))
+    assert_array_less(e, 5)
 
     t_eval = [4.99, 3, 1.5, 1.1, 1.01]
     res = solve_ivp(fun_rational, [5, 1], y0, rtol=rtol, atol=atol,
                     t_eval=t_eval)
     assert_equal(res.t, t_eval)
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     t_eval = [4, 6]
@@ -671,20 +671,20 @@ def test_t_eval_dense_output():
     res_d = solve_ivp(fun_rational, t_span, y0, rtol=rtol, atol=atol,
                       t_eval=t_eval, dense_output=True)
     assert_equal(res.t, t_eval)
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     assert_equal(res.t, res_d.t)
     assert_equal(res.y, res_d.y)
-    assert_(res_d.t_events is None)
-    assert_(res_d.success)
+    assert res_d.t_events is None
+    assert res_d.success
     assert_equal(res_d.status, 0)
 
     # if t and y are equal only test values for one case
     y_true = sol_rational(res.t)
     e = compute_error(res.y, y_true, rtol, atol)
-    assert_(np.all(e < 5))
+    assert_array_less(e, 5)
 
 
 # This test ensures that the interpolant calculated through LSODA is correct.
@@ -704,20 +704,20 @@ def test_dense_output_LSODA():
     assert_equal(res.t[0], t_span[0])
     assert_equal(res.t[-1], t_span[-1])
     assert_allclose(first_step, np.abs(res.t[1] - t_span[0]))
-    assert_(res.t_events is None)
-    assert_(res.success)
+    assert res.t_events is None
+    assert res.success
     assert_equal(res.status, 0)
 
     y_true = sol_dense_output_LSODA(res.t)
     e = compute_error(res.y, y_true, rtol, atol)
-    assert_(np.all(e < 5))
+    assert_array_less(e, 5)
 
     tc = np.linspace(*t_span)
     yc_true = sol_dense_output_LSODA(tc)
     yc = res.sol(tc)
 
     e = compute_error(yc, yc_true, rtol, atol)
-    assert_(np.all(e < 5))
+    assert_array_less(e, 5)
 
     assert_allclose(res.sol(res.t), res.y, rtol=1e-15, atol=1e-15)
 
@@ -786,10 +786,10 @@ def test_classes():
         assert_equal(solver.direction, 1)
         assert_equal(solver.t, 5)
         assert_equal(solver.y, y0)
-        assert_(solver.step_size is None)
+        assert solver.step_size is None
         if cls is not LSODA:
-            assert_(solver.nfev > 0)
-            assert_(solver.njev >= 0)
+            assert solver.nfev > 0
+            assert solver.njev >= 0
             assert_equal(solver.nlu, 0)
         else:
             assert_equal(solver.nfev, 0)
@@ -804,12 +804,12 @@ def test_classes():
         assert_equal(solver.n, 2)
         assert_equal(solver.t_bound, np.inf)
         assert_equal(solver.direction, 1)
-        assert_(solver.t > 5)
-        assert_(not np.all(np.equal(solver.y, y0)))
-        assert_(solver.step_size > 0)
-        assert_(solver.nfev > 0)
-        assert_(solver.njev >= 0)
-        assert_(solver.nlu >= 0)
+        assert solver.t > 5
+        assert any(np.not_equal(solver.y, y0))
+        assert solver.step_size > 0
+        assert solver.nfev > 0
+        assert solver.njev >= 0
+        assert solver.nlu >= 0
         sol = solver.dense_output()
         assert_allclose(sol(5), y0, rtol=1e-15, atol=0)
 
@@ -1016,6 +1016,6 @@ def test_args():
 @pytest.mark.parametrize('method', ['RK23', 'RK45', 'DOP853', 'Radau', 'BDF', 'LSODA'])
 def test_integration_zero_rhs(method):
     result = solve_ivp(fun_zero, [0, 10], np.ones(3), method=method)
-    assert_(result.success)
+    assert result.success
     assert_equal(result.status, 0)
     assert_allclose(result.y, 1.0, rtol=1e-15)
